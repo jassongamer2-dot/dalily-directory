@@ -8,12 +8,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        # <-- No trailing slash
-        "https://dalily-directory-l62hrw58d-jassongamer2-9403s-projects.vercel.app",
+        "https://dalily-directory-l62hrw58d-jassongamer2-9403s-projects.vercel.app"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
