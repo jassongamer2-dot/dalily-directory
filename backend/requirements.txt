@@ -4,6 +4,7 @@ asyncpg==0.30.*
 pydantic-settings==2.*
 pyjwt[crypto]==2.*
 supabase==2.*
+paddlepaddle
 paddleocr==2.*
 pytesseract==0.3.*
 opencv-python-headless==4.*
