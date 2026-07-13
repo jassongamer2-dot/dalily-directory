@@ -4,13 +4,12 @@ from app.routers import companies, ingestion, review_queue, industries
 
 app = FastAPI(title="Industrial Directory API")
 
-# backend/app/main.py
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        # <-- No slash at the end!
+        # <-- No trailing slash
         "https://dalily-directory-l62hrw58d-jassongamer2-9403s-projects.vercel.app",
     ],
     allow_credentials=True,

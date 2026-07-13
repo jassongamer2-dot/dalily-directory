@@ -1,4 +1,3 @@
-# backend/app/database.py
 import asyncpg
 from app.config import settings
 
@@ -12,6 +11,6 @@ async def get_pool():
             settings.DATABASE_URL,
             min_size=1,
             max_size=10,
-            statement_cache_size=0  # <-- Add this line right here
+            statement_cache_size=0  # <-- Crucial: prevents DuplicatePreparedStatementError
         )
     return _pool
