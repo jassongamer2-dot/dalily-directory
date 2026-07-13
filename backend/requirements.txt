@@ -1,0 +1,16 @@
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+asyncpg==0.30.*
+pydantic-settings==2.*
+pyjwt[crypto]==2.*
+supabase==2.*
+paddleocr==2.*
+pytesseract==0.3.*
+opencv-python-headless==4.*
+pymupdf==1.24.*
+pandas==2.*
+python-docx==1.*
+anthropic==0.*
+pytest==8.*
+pytest-asyncio==0.23.*
+python-multipart==0.0.*
