@@ -1,8 +1,10 @@
+// frontend/lib/api.ts
 import { supabase } from "./supabaseClient";
 
+// Make sure this is YOUR actual Railway URL, with no slash at the end
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "[http://127.0.0.1:8000](http://127.0.0.1:8000)";
+  "https://dalily-directory-production.up.railway.app";
 
 async function authHeader() {
   const { data } = await supabase.auth.getSession();

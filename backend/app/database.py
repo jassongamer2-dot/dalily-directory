@@ -1,11 +1,17 @@
+# backend/app/database.py
 import asyncpg
 from app.config import settings
 
-_pool: asyncpg.Pool | None = None
+_pool = None
 
 
-async def get_pool() -> asyncpg.Pool:
+async def get_pool():
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=2, max_size=10)
+        _pool = await asyncpg.create_pool(
+            settings.DATABASE_URL,
+            min_size=1,
+            max_size=10,
+            statement_cache_size=0  # <-- Add this line right here
+        )
     return _pool
