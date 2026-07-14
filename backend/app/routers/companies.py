@@ -29,9 +29,9 @@ async def search_companies(
             LEFT JOIN phone_numbers p ON p.company_id = c.id
             LEFT JOIN addresses a ON a.company_id = c.id
             WHERE c.organization_id = $1
-              AND c.status = 'verified'
-              AND c.name % $2
-              AND ($3::uuid IS NULL OR c.industry_id = $3)
+            AND c.status = 'verified'
+            AND (c.name ILIKE '%' || $2 || '%' OR c.name % $2)
+            AND ($3::uuid IS NULL OR c.industry_id = $3)
             GROUP BY c.id, i.name_en, a.address_text
             ORDER BY similarity(c.name, $2) DESC
             OFFSET $4 LIMIT $5

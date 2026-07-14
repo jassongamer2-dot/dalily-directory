@@ -81,3 +81,22 @@ export async function createCompany(payload: {
   if (!res.ok) throw new Error("Create failed");
   return res.json();
 }
+
+export async function renameIndustry(id: string, name_en: string) {
+  const res = await fetch(`${BASE_URL}/industries/${id}`, {
+    method: "PATCH",
+    headers: { ...(await authHeader()), "Content-Type": "application/json" },
+    body: JSON.stringify({ name_en }),
+  });
+  if (!res.ok) throw new Error("Rename failed");
+  return res.json();
+}
+
+export async function deleteIndustry(id: string) {
+  const res = await fetch(`${BASE_URL}/industries/${id}`, {
+    method: "DELETE",
+    headers: (await authHeader()) as HeadersInit,
+  });
+  if (!res.ok) throw new Error("Delete failed");
+  return res.json();
+}

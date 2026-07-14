@@ -1,24 +1,26 @@
+from worker.parsers.docx_extract import extract_docx_text
+from worker.parsers.excel_gaps import find_gaps, excel_row_to_entry
+from worker.extraction.structure_entries import structure_page, structure_text_blocks
+from worker.extraction.tier_b_claude import extract_page_tier_b, extract_text_tier_b
+from worker.extraction.tier_a_paddle import extract_page_tier_a
+from worker.extraction.preprocess import preprocess_for_ocr
+from worker.extraction.pdf_to_images import pdf_page_to_array, array_to_png_bytes
+from app.services.dedup import find_possible_duplicate
+from app.services.storage import download_from_storage
+from app.config import settings
+import pandas as pd
+import fitz
+import asyncpg
+import asyncio
 import sys
 import os
 # Force Python to recognize the backend root folder before importing the app
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
 
-import asyncio
-import asyncpg
-import fitz
-import pandas as pd
-from app.config import settings
-from app.services.storage import download_from_storage
-from app.services.dedup import find_possible_duplicate
-from worker.extraction.pdf_to_images import pdf_page_to_array, array_to_png_bytes
-from worker.extraction.preprocess import preprocess_for_ocr
-from worker.extraction.tier_a_paddle import extract_page_tier_a
-from worker.extraction.tier_b_claude import extract_page_tier_b, extract_text_tier_b
-from worker.extraction.structure_entries import structure_page, structure_text_blocks
-from worker.parsers.excel_gaps import find_gaps, excel_row_to_entry
-from worker.parsers.docx_extract import extract_docx_text
 
 POLL_INTERVAL_SECONDS = 5
+
 
 async def claim_next_job(conn: asyncpg.Connection):
     return await conn.fetchrow("""
@@ -33,6 +35,7 @@ async def claim_next_job(conn: asyncpg.Connection):
         )
         RETURNING *
     """)
+
 
 async def process_job(pool: asyncpg.Pool, job: asyncpg.Record):
     try:
@@ -58,6 +61,7 @@ async def process_job(pool: asyncpg.Pool, job: asyncpg.Record):
             await conn.execute("UPDATE ingestion_jobs SET status='failed' WHERE id=$1", job["id"])
         raise
 
+
 async def _process_pdf(pool, job, local_path) -> dict:
     doc = fitz.open(local_path)
     total_pages = len(doc)
@@ -74,11 +78,13 @@ async def _process_pdf(pool, job, local_path) -> dict:
             if settings.EXTRACTION_TIER == "tier_b":
                 entries = extract_page_tier_b(array_to_png_bytes(page_array))
             else:
-                entries = structure_page(extract_page_tier_a(preprocess_for_ocr(page_array)))
+                entries = structure_page(extract_page_tier_a(
+                    preprocess_for_ocr(page_array)))
         e, r = await _persist_entries(pool, job, entries, source_page=page_num)
         extracted += e
         needing_review += r
     return {"extracted": extracted, "needing_review": needing_review}
+
 
 async def _process_excel(pool, job, local_path) -> dict:
     df = pd.read_excel(local_path).rename(columns=lambda c: c.strip().lower())
@@ -87,11 +93,14 @@ async def _process_excel(pool, job, local_path) -> dict:
     e, r = await _persist_entries(pool, job, entries, source_page=None, force_review=True)
     return {"extracted": e, "needing_review": r}
 
+
 async def _process_word(pool, job, local_path) -> dict:
     text = extract_docx_text(local_path)
-    entries = extract_text_tier_b(text) if settings.EXTRACTION_TIER == "tier_b" else structure_text_blocks(text)
+    entries = extract_text_tier_b(
+        text) if settings.EXTRACTION_TIER == "tier_b" else structure_text_blocks(text)
     e, r = await _persist_entries(pool, job, entries, source_page=None)
     return {"extracted": e, "needing_review": r}
+
 
 async def _persist_entries(pool, job, entries, source_page, force_review=False) -> tuple[int, int]:
     extracted = needing_review = 0
@@ -101,13 +110,14 @@ async def _persist_entries(pool, job, entries, source_page, force_review=False) 
                 conn, job["organization_id"], entry.get("name") or "",
                 [p["number"] for p in entry.get("phones", [])],
             )
-            status = "pending_review" if (force_review or dup or entry.get("confidence") != "high") else "verified"
+            status = "pending_review" if (force_review or dup or entry.get(
+                "confidence") != "high") else "verified"
             company = await conn.fetchrow("""
                 INSERT INTO companies (organization_id, name, source_document, source_page,
                                         status, confidence_score, duplicate_of)
                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
             """, job["organization_id"], entry.get("name"), job["file_name"], source_page,
-                 status, _confidence_to_score(entry.get("confidence")), dup["id"] if dup else None)
+                status, _confidence_to_score(entry.get("confidence")), dup["id"] if dup else None)
 
             for phone in entry.get("phones", []):
                 await conn.execute(
@@ -123,11 +133,15 @@ async def _persist_entries(pool, job, entries, source_page, force_review=False) 
             needing_review += status == "pending_review"
     return extracted, needing_review
 
+
 def _confidence_to_score(label: str | None) -> float:
-    return {"high": 0.95, "medium": 0.7, "low": 0.4}.get(label, 0.5)
+    return {"high": 0.95, "medium": 0.7, "low": 0.4}.get(label or "", 0.5)
+
+# worker/run_worker.py — main_loop(), one-line fix
+
 
 async def main_loop():
-    pool = await asyncpg.create_pool(settings.DATABASE_URL)
+    pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=1, max_size=3, statement_cache_size=0)
     while True:
         async with pool.acquire() as conn, conn.transaction():
             job = await claim_next_job(conn)
