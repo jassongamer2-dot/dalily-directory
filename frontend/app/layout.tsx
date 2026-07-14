@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/review-queue" className="text-sm font-semibold text-ink-muted hover:text-brass transition-colors">
                 Review Queue
               </Link>
+              <Link href="/ingestion" className="text-sm font-semibold text-ink-muted hover:text-brass transition-colors">
+                Upload Documents
+              </Link>
             </nav>
           </div>
         </header>
