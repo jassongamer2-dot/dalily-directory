@@ -6,9 +6,13 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://dalily-directory-production.up.railway.app";
 
+// lib/api.ts — replace just this one function, leave everything else in the file as-is
 async function authHeader() {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+  let token = (await supabase.auth.getSession()).data.session?.access_token;
+  if (!token) {
+    await new Promise((r) => setTimeout(r, 400));
+    token = (await supabase.auth.getSession()).data.session?.access_token;
+  }
   if (!token) throw new Error("No active session token found");
   return { Authorization: `Bearer ${token}` };
 }
