@@ -9,16 +9,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { 
-      setError(error.message); 
-      return; 
-    }
-    // On success, redirect to the main directory page
-    router.push("/");
-  }
+// app/login/page.tsx — inside handleLogin, just this one line changes
+async function handleLogin(e: React.FormEvent) {
+  e.preventDefault();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { setError(error.message); return; }
+  window.location.href = "/";  // was router.push("/") — hard nav so middleware sees the fresh cookie
+}
 
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-sm flex-col justify-center p-6">

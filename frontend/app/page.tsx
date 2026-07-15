@@ -12,10 +12,10 @@ export default function DirectoryPage() {
   const debouncedQuery = useDebouncedValue(query, 300);
   const [results, setResults] = useState<{results: any[]}>({ results: [] });
 
+  // app/page.tsx — the effect, remove the early-return guard
   useEffect(() => {
-    if (debouncedQuery.length === 0) return;
-    searchCompanies(debouncedQuery, industry).then(setResults);
-  }, [debouncedQuery, industry]);
+  searchCompanies(debouncedQuery, industry).then(setResults);
+}, [debouncedQuery, industry]);
 
   return (
     <main className="mx-auto max-w-2xl p-4">

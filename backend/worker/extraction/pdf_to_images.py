@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 
-def pdf_page_to_array(pdf_path: str, page_num: int, dpi: int = 300) -> np.ndarray:
+def pdf_page_to_array(pdf_path: str, page_num: int, dpi: int = 200) -> np.ndarray:
     doc = fitz.open(pdf_path)
     page = doc[page_num]
     pix = page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72))
