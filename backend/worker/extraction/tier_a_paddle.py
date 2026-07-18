@@ -9,7 +9,7 @@ CONFIDENCE_CROSSCHECK_THRESHOLD = 0.75
 
 def extract_page_tier_a(image: np.ndarray) -> list[dict]:
     # PaddleOCR expects a numpy array from preprocess_for_ocr
-    result = paddle_ocr.ocr(image, cls=True)
+    result = paddle_ocr.ocr(image, cls=False)
 
     # Paddle returns a list of results per page (we process 1 page at a time)
     if not result or result[0] is None:
