@@ -70,7 +70,8 @@ async def _process_pdf(pool, job, local_path) -> dict:
 
     extracted = needing_review = 0
     for page_num in range(total_pages):
-        text_layer = doc[page_num].get_text().strip()
+        try:
+        text_layer = doc[page_num].get_text().strip()  # pyright: ignore[reportAttributeAccessIssue]
         if text_layer:
             entries = structure_text_blocks(text_layer)
         else:
@@ -78,12 +79,13 @@ async def _process_pdf(pool, job, local_path) -> dict:
             if settings.EXTRACTION_TIER == "tier_b":
                 entries = extract_page_tier_b(array_to_png_bytes(page_array))
             else:
-                entries = structure_page(extract_page_tier_a(
-                    preprocess_for_ocr(page_array)))
+                entries = structure_page(extract_page_tier_a(preprocess_for_ocr(page_array)))
         e, r = await _persist_entries(pool, job, entries, source_page=page_num)
         extracted += e
         needing_review += r
-    return {"extracted": extracted, "needing_review": needing_review}
+    except Exception as page_error:
+        print(f"Page {page_num} failed, skipping: {page_error}")
+        continue
 
 
 async def _process_excel(pool, job, local_path) -> dict:
